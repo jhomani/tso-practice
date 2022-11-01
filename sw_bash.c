@@ -8,6 +8,7 @@
 #define OK       0
 #define NO_INPUT 1
 #define TOO_LONG 2
+#define ERROR    3
 
 /** Colors to print on console **/
 void reset () {
@@ -16,7 +17,9 @@ void reset () {
 
 void printRed (const char *format) {
 	printf("\033[1;31m");
+	printf("\n⋆⋆⋆ ERROR ⋆⋆⋆\n\n>> ");
 	printf(format);
+	printf("\n\n");
 	reset();
 }
 void printCyan (const char *format) {
@@ -64,14 +67,15 @@ void listFiles() {
 /*
  * Function to read file given name
  */
-void readFile(char path[100]) {
+int readFile(char path[100]) {
         FILE* file;
         char fileLine;
  
         file = fopen(path, "r");
 
         if (NULL == file) {
-            printRed("Path not found!");
+            printRed("Incorrect file path, please check file path!");
+	    return ERROR;
         }
 
         while ((fileLine = fgetc(file)) != EOF) {
@@ -79,6 +83,8 @@ void readFile(char path[100]) {
 	}
 
         fclose(file);
+
+	return OK;
 }
 
 /*
@@ -86,26 +92,42 @@ void readFile(char path[100]) {
  */
 int changeLocation(char path[100]) {
 	if(chdir(path) < 0) {
-	    //exit(EXIT_FAILURE); handle error
+            printRed("Incorrect location, please check it!");
 	}
 }
 
+/*
+ * Function to clear console 
+ */
+int clearConsole() {
+	printf("\e[1;1H\e[2J");
+}
 
-static int getLine (/*char *prmpt,*/ char *buff, size_t sz) {
+/*
+ * Function to show manual
+ */
+int showManual() {
+	printf(
+		"This are available commands\n\n"
+		"list: To list files where you are located\n"
+		"view [path]: To show file content\n"
+		"change [path]: To change location\n"
+		"exit: To close program\n"
+		"clear: To clear console\n"
+		"help: To show all availables commands\n"
+	);
+}
+
+
+/*
+ * get user input line as single string
+ */
+static int getLine (char *buff, size_t sz) {
     int ch, extra;
-    //size_t *sz = sizeof(buff);
-
-    // Get line with buffer overrun protection.
-//    if (prmpt != NULL) {
-//        printf ("%s", prmpt);
-//        fflush (stdout);
-//    }
 
     if (fgets(buff, sz, stdin) == NULL)
         return NO_INPUT;
 
-    // If it was too long, there'll be no newline. In that case, we flush
-    // to end of line so that excess doesn't affect the next call.
     if (buff[strlen(buff) - 1] != '\n') {
         extra = 0;
         while(((ch = getchar()) != '\n') && (ch != EOF)) extra = 1;
@@ -113,12 +135,11 @@ static int getLine (/*char *prmpt,*/ char *buff, size_t sz) {
         return (extra == 1) ? TOO_LONG : OK;
     }
 
-    // Otherwise remove newline and give string back to caller.
+    // To remove bread line
     buff[strlen(buff) - 1] = '\0';
 
     return OK;
 }
-
 
 int main(void) {
 	char inputLine[50];
@@ -135,13 +156,24 @@ int main(void) {
 		char* argument = strtok(NULL, " ");;
 
 		if(command != NULL) {
-			if(strcmp(command, "exit") == 0) exit(EXIT_SUCCESS);
-			else if(strcmp(command, "list") == 0) listFiles();
-			else if(strcmp(command, "view") == 0 && argument != NULL) readFile(argument);
-			else if(strcmp(command, "change") == 0 && argument != NULL) changeLocation(argument);
+			if(strcmp(command, "exit") == 0)
+				exit(EXIT_SUCCESS);
+			else if(strcmp(command, "list") == 0)
+				listFiles();
+			else if(strcmp(command, "help") == 0)
+				showManual();
+			else if(strcmp(command, "clear") == 0)
+				clearConsole(); 
+			else if(strcmp(command, "view") == 0 && argument != NULL)
+				readFile(argument);
+			else if(strcmp(command, "change") == 0 && argument != NULL)
+				changeLocation(argument);
+			else
+				printRed(
+					"Invalid command \n\n"
+					"Enter 'help' to cheack available commands"
+				);
 
-			//printf("command: %s\n", command);
-			//printf("argument: %s\n", argument);
 		}
 
 	}
