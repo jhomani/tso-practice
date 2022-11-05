@@ -28,12 +28,6 @@ void printCyan (const char *format) {
 	reset();
 }
 
-void printPurple (const char *format) {
-	printf("\033[0;35m");
-	printf(format);
-	reset();
-}
-
 /*
  * Function to list files in currente directory
  */
@@ -143,7 +137,6 @@ static int getLine (char *buff, size_t sz) {
 
 int main(void) {
 	char inputLine[50];
-	char argument[50];
 
 	while(1) {
 		char cwd[PATH_MAX];
